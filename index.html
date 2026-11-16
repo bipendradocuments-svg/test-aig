@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ledgerly — Personal Expense &amp; Budget Tracker</title>
+  <meta name="description" content="Offline-first personal expense ledger and monthly budget tracker PWA with instant local device storage." />
+
+  <!-- PWA & Mobile Browser Meta -->
+  <meta name="theme-color" content="#113c29" id="meta-theme-color" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ledgerly" />
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sticky Header -->
+    <header class="app-header">
+      <div class="brand-lockup">
+        <img src="./icons/icon-192.png" alt="Ledgerly icon" class="brand-mark" width="34" height="34" />
+        <div>
+          <h1 class="brand-title">Ledgerly</h1>
+          <div class="network-badge" id="network-badge" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="network-status-text">Local Storage Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="btn-install-chip" id="btn-header-install" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
+          <span>Install</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Month Navigation -->
+    <nav class="month-bar" aria-label="Select month">
+      <button type="button" class="month-nav-btn" id="btn-prev-month" aria-label="Previous month">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      </button>
+      <span class="month-label" id="label-current-month">Month</span>
+      <button type="button" class="month-nav-btn" id="btn-next-month" aria-label="Next month">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+    </nav>
+
+    <!-- Main Content Views -->
+    <main class="view-container">
+      <!-- TAB 1: LEDGER -->
+      <section class="tab-panel is-active" id="panel-ledger" data-panel="ledger" aria-label="Monthly ledger">
+        <div class="hero-ledger-card">
+          <div class="hero-top-row">
+            <div>
+              <div class="hero-eyebrow" id="hero-remaining-label">Remaining Budget</div>
+              <div class="hero-amount tabular" id="hero-remaining-amount">$0.00</div>
+            </div>
+            <span class="hero-pace-pill tabular" id="hero-pace-pill">0% used</span>
+          </div>
+
+          <div class="hero-progress-wrap">
+            <div class="hero-progress-labels tabular">
+              <span id="hero-spent-text">$0 spent</span>
+              <button type="button" class="hero-edit-budget-btn" id="hero-budget-btn" title="Edit monthly budget">
+                <span>of <strong id="hero-budget-val">$2,500</strong> budget</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              </button>
+            </div>
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="hero-progressbar" aria-valuenow="0">
+              <div class="progress-fill" id="hero-progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="hero-stats-grid tabular">
+            <div class="hero-stat-item">
+              <span class="hero-stat-label">Safe Daily Allowance</span>
+              <span class="hero-stat-val" id="hero-daily-safe-val">$0 / day</span>
+            </div>
+            <div class="hero-stat-item">
+              <span class="hero-stat-label">Monthly Income</span>
+              <span class="hero-stat-val" id="hero-income-val">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Category Filter -->
+        <div class="filter-controls">
+          <div class="search-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <label for="input-search" class="sr-only">Search transactions</label>
+            <input type="search" id="input-search" class="search-input" placeholder="Search merchant, category, or note..." autocomplete="off" />
+            <button type="button" class="search-clear-btn" id="btn-clear-search" aria-label="Clear search" hidden>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="category-chips" id="category-filter-chips" role="tablist" aria-label="Filter by category"></div>
+        </div>
+
+        <!-- Chronological Transactions -->
+        <div id="transactions-container"></div>
+      </section>
+
+      <!-- TAB 2: BUDGETS & INSIGHTS -->
+      <section class="tab-panel" id="panel-budgets" data-panel="budgets" aria-label="Budgets and spending rhythm">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Last 7 Days Spending</h2>
+              <div class="section-subtitle tabular" id="rhythm-week-total">$0.00 total in 7 days</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="rhythm-bars tabular" id="rhythm-chart-bars"></div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Category Caps</h2>
+              <div class="section-subtitle" id="budgets-summary-subtitle">Tap any category to adjust its monthly cap</div>
+            </div>
+            <button type="button" class="btn-text-action" id="btn-edit-monthly-budget">Overall Cap</button>
+          </div>
+          <div class="budget-cat-list tabular" id="category-budgets-list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SETTINGS & MOBILE PWA -->
+      <section class="tab-panel" id="panel-settings" data-panel="settings" aria-label="Settings and PWA status">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Mobile PWA Status</h2>
+              <div class="section-subtitle">Verify offline mode &amp; home screen install</div>
+            </div>
+          </div>
+
+          <div class="pwa-status-grid tabular">
+            <div class="pwa-metric-box">
+              <div class="pwa-metric-label">Service Worker</div>
+              <div class="pwa-metric-value" id="pwa-sw-state">Checking...</div>
+            </div>
+            <div class="pwa-metric-box">
+              <div class="pwa-metric-label">Connection</div>
+              <div class="pwa-metric-value" id="pwa-network-state">Online</div>
+            </div>
+            <div class="pwa-metric-box">
+              <div class="pwa-metric-label">Launch Mode</div>
+              <div class="pwa-metric-value" id="pwa-display-mode">Browser</div>
+            </div>
+            <div class="pwa-metric-box">
+              <div class="pwa-metric-label">Local Storage</div>
+              <div class="pwa-metric-value" id="pwa-storage-used">0 KB</div>
+            </div>
+          </div>
+
+          <div class="action-btn-stack">
+            <button type="button" class="btn-secondary" id="btn-pwa-install-action">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                <path d="M12 18h.01" />
+              </svg>
+              <span id="label-pwa-install-btn">Install on Phone</span>
+            </button>
+            <button type="button" class="btn-secondary" id="btn-pwa-share">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+                <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+              </svg>
+              <span>Share Summary</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Preferences</h2>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label-title">Currency</div>
+              <div class="settings-label-sub">Display symbol across your ledger</div>
+            </div>
+            <label for="select-currency" class="sr-only">Currency</label>
+            <select id="select-currency" class="select-control">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="CAD">CAD (CA$)</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label-title">Appearance</div>
+              <div class="settings-label-sub">Adapt to light or dark ambient light</div>
+            </div>
+            <div class="segmented-theme" role="group" aria-label="Theme preference">
+              <button type="button" class="seg-btn is-active" data-theme-opt="auto" id="btn-theme-auto">Auto</button>
+              <button type="button" class="seg-btn" data-theme-opt="light" id="btn-theme-light">Light</button>
+              <button type="button" class="seg-btn" data-theme-opt="dark" id="btn-theme-dark">Dark</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Local Data &amp; Backups</h2>
+              <div class="section-subtitle">All records stay privately on this device</div>
+            </div>
+          </div>
+
+          <div class="action-btn-stack">
+            <button type="button" class="btn-secondary" id="btn-export-csv">Export CSV</button>
+            <button type="button" class="btn-secondary" id="btn-export-json">Backup JSON</button>
+            <button type="button" class="btn-secondary" id="btn-import-json">Import JSON</button>
+            <button type="button" class="btn-secondary" id="btn-reset-demo">Load Sample Data</button>
+            <button type="button" class="btn-secondary btn-danger-outline btn-full" id="btn-clear-all">Clear All Transactions</button>
+          </div>
+          <input type="file" id="input-import-file" accept="application/json,.json" hidden />
+        </div>
+      </section>
+    </main>
+
+    <!-- Thumb-Friendly Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Primary navigation">
+      <div class="nav-side-group">
+        <button type="button" class="nav-tab-btn is-active" data-target="ledger" id="nav-btn-ledger">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="M7 8h10" />
+            <path d="M7 12h10" />
+            <path d="M7 16h6" />
+          </svg>
+          <span>Ledger</span>
+        </button>
+      </div>
+
+      <button type="button" class="nav-fab-add" id="btn-fab-add" aria-label="Add transaction">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+      </button>
+
+      <div class="nav-side-group">
+        <button type="button" class="nav-tab-btn" data-target="budgets" id="nav-btn-budgets">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v18h18" />
+            <path d="M7 16v-5" />
+            <path d="M12 16V8" />
+            <path d="M17 16v-3" />
+          </svg>
+          <span>Budgets</span>
+        </button>
+
+        <button type="button" class="nav-tab-btn" data-target="settings" id="nav-btn-settings">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          <span>Settings</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- SHEET 1: Add / Edit Transaction -->
+  <div class="sheet-backdrop" id="sheet-transaction" role="dialog" aria-modal="true" aria-labelledby="sheet-tx-title">
+    <div class="bottom-sheet">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-header">
+        <h2 class="sheet-title" id="sheet-tx-title">New Entry</h2>
+        <button type="button" class="sheet-close-btn" id="btn-close-tx-sheet" aria-label="Close">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-transaction">
+        <div class="type-switch" role="group" aria-label="Entry type">
+          <button type="button" class="type-opt-btn is-active" data-type="expense" id="btn-type-expense">Expense</button>
+          <button type="button" class="type-opt-btn" data-type="income" id="btn-type-income">Income</button>
+        </div>
+
+        <div class="amount-field-wrap tabular">
+          <span class="currency-prefix" id="tx-currency-symbol">$</span>
+          <label for="input-tx-amount" class="sr-only">Amount</label>
+          <input type="number" id="input-tx-amount" class="amount-input tabular" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00" required />
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Category</span>
+          <div class="cat-picker-grid" id="tx-category-grid"></div>
+        </div>
+
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="input-tx-title" class="form-label">Merchant or Title</label>
+            <input type="text" id="input-tx-title" class="text-input" placeholder="e.g. Trader Joe's" maxlength="60" required />
+          </div>
+          <div class="form-group">
+            <label for="input-tx-date" class="form-label">Date</label>
+            <input type="date" id="input-tx-date" class="text-input tabular" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-tx-note" class="form-label">Optional Note</label>
+          <input type="text" id="input-tx-note" class="text-input" placeholder="Weekly produce &amp; pantry" maxlength="100" />
+        </div>
+
+        <div class="sheet-footer-actions">
+          <button type="button" class="btn-delete-tx" id="btn-delete-tx" hidden>Delete</button>
+          <button type="submit" class="btn-submit-primary" id="btn-save-tx">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SHEET 2: Edit Monthly / Category Budget -->
+  <div class="sheet-backdrop" id="sheet-budget-edit" role="dialog" aria-modal="true" aria-labelledby="sheet-budget-title">
+    <div class="bottom-sheet">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-header">
+        <h2 class="sheet-title" id="sheet-budget-title">Adjust Monthly Budget</h2>
+        <button type="button" class="sheet-close-btn" id="btn-close-budget-sheet" aria-label="Close">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-budget-edit">
+        <p class="section-subtitle" id="budget-edit-helper" style="margin: 0 0 14px;">Set your target monthly spending cap.</p>
+        <div class="amount-field-wrap tabular">
+          <span class="currency-prefix" id="budget-currency-symbol">$</span>
+          <label for="input-budget-limit" class="sr-only">Budget limit</label>
+          <input type="number" id="input-budget-limit" class="amount-input tabular" inputmode="decimal" step="1" min="1" placeholder="2500" required />
+        </div>
+        <div class="sheet-footer-actions">
+          <button type="submit" class="btn-submit-primary" id="btn-save-budget">Save Cap</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SHEET 3: Mobile Install Instructions -->
+  <div class="sheet-backdrop" id="sheet-install-guide" role="dialog" aria-modal="true" aria-labelledby="sheet-install-title">
+    <div class="bottom-sheet">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-header">
+        <h2 class="sheet-title" id="sheet-install-title">Install Ledgerly on Mobile</h2>
+        <button type="button" class="sheet-close-btn" id="btn-close-install-sheet" aria-label="Close">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+      <div id="install-guide-content">
+        <ol class="guide-steps">
+          <li><strong>iPhone / iPad (Safari):</strong> Tap the <strong>Share</strong> button in the browser bar, scroll down, and tap <strong>Add to Home Screen</strong>.</li>
+          <li><strong>Android (Chrome / Edge):</strong> Tap the three-dot menu in the top-right corner and select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+          <li><strong>Test Offline Mode:</strong> Once opened from your Home Screen, switch on <strong>Airplane Mode</strong> — your ledger and budgets continue working locally.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Banner -->
+  <div class="toast-banner" id="toast-banner" role="status" aria-live="polite">
+    <span id="toast-message">Saved</span>
+    <button type="button" class="toast-undo-btn" id="btn-toast-undo" hidden>Undo</button>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
